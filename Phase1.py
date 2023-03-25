@@ -68,3 +68,23 @@ def patient_is_sick(
             if lab["LabName"] == lab_name and float(lab["LabValue"]) == value:
                 return True
         return False
+
+
+if __name__ == "__main__":
+    patient_data = parse_data("Patient.txt", "lab.txt")
+
+    sick = patient_is_sick(
+        patient_data,
+        "1A8791E3-A61C-455A-8DEE-763EB90C9B2C",
+        "URINALYSIS: RED BLOOD CELLS",
+        ">",
+        10,
+    )
+    print(sick)
+
+    patient_data = parse_data(
+        "Patient.txt",
+        "lab.txt",
+    )
+    age = patient_age(patient_data, "65A7FBE0-EA9F-49E9-9824-D8F3AD98DAC0")
+    print(age)
