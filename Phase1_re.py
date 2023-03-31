@@ -3,22 +3,31 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 
-def parse_data(filename: str) -> Dict[str, List[str]]:
+def parse_data(
+    patient_filename: str, lab_filename: str
+) -> tuple[Dict[str, List[str]], Dict[str, List[str]]]:
     """Read and parse the patient and lab data files."""
-    with open(filename, encoding="UTF-8-sig") as file:
-        lines = file.readlines()
-    if not lines:
-        return {}
 
-    header = lines[0].strip().split("\t")
-    data_dict: Dict[str, List[str]] = {col: [] for col in header}
+    def parse_file(filename: str) -> Dict[str, List[str]]:
+        with open(filename, encoding="UTF-8-sig") as file:
+            lines = file.readlines()
+        if not lines:
+            return {}
 
-    for line in lines[1:]:
-        values = line.strip().split("\t")
-        for i, value in enumerate(values):
-            data_dict[header[i]].append(value)
+        header = lines[0].strip().split("\t")
+        data_dict: Dict[str, List[str]] = {col: [] for col in header}
 
-    return data_dict
+        for line in lines[1:]:
+            values = line.strip().split("\t")
+            for i, value in enumerate(values):
+                data_dict[header[i]].append(value)
+
+        return data_dict
+
+    patient_data = parse_file(patient_filename)
+    lab_data = parse_file(lab_filename)
+
+    return patient_data, lab_data
 
 
 def patient_age(records: Dict[str, List[str]], patient_id: str) -> int:
@@ -46,8 +55,6 @@ def patient_is_sick(
     value: float,
 ) -> bool:
     """Return a boolean indicating whether sick or not."""
-    patient_index = patient_records["PatientID"].index(patient_id)
-
     for i, lab in enumerate(lab_records["LabName"]):
         if lab == lab_name and lab_records["PatientID"][i] == patient_id:
             lab_value = float(lab_records["LabValue"][i])
@@ -61,8 +68,7 @@ def patient_is_sick(
 
 
 if __name__ == "__main__":
-    patient_data = parse_data("Patient.txt")
-    lab_data = parse_data("lab.txt")
+    patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
 
     sick = patient_is_sick(
         patient_data,
