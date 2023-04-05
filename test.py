@@ -3,7 +3,7 @@ import pytest
 from EHR import parse_file, parse_data, patient_age, patient_is_sick
 
 
-def test_parse_file():
+def test_parse_file() -> None:
     """Test parse_data() function."""
     data = parse_file("Test_Patient.txt")
     assert data["PatientID"] == [
@@ -21,7 +21,7 @@ def test_parse_file():
     assert len(data["PatientPopulationPercentageBelowPoverty"]) == 5
 
 
-def test_parse_data():
+def test_parse_data() -> None:
     """Test parse_data() function."""
     # Test patient data
     patient_filename = "Test_Patient.txt"
@@ -49,7 +49,7 @@ def test_parse_data():
     assert lab_data["LabDateTime"][5] == "1992-07-01 01:25:54.887"
 
 
-def test_patient_age():
+def test_patient_age() -> None:
     """Test patient_age() function."""
     patient_data_test, _ = parse_data("Test_Patient.txt", "TestData_Lab.txt")
     assert patient_age(patient_data_test, "MB2ABB23") == 75
@@ -61,7 +61,7 @@ def test_patient_age():
         patient_age(patient_data_test, "abcd")
 
 
-def test_patient_is_sick():
+def test_patient_is_sick() -> None:
     """Test patient_is_sick() function."""
     patient_data_test, lab_data_test = parse_data(
         "Test_Patient.txt", "TestData_Lab.txt"
