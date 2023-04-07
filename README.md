@@ -43,17 +43,18 @@ PatientDateOfBirth
 
 `patient_is_sick(patient_records: dict[str, list[Any]], lab_records: dict[str, list[Any]], patient_id: str, lab_name: str, operator: str, value: float) -> bool`
 
-Columns necessary for this function:
-PatientID,
-LabName,
-LabValue
-
 1. patient_records: a dictionary with column names as keys and lists of values as values for patient data; 
 2. lab_records: a dictionary: same format for lab data; 
 3. patient_id: a string representing the patient ID; 
 4. lab_name: a string representing the lab name; 
 5. operator: a string representing the comparison operator; 
 6. value: a float representing the value to compare the lab result against:  returns a boolean.
+
+Columns necessary for this function:
+PatientID,
+LabName,
+LabValue
+
 
 ### Examples for using  `EHR.py`
 
