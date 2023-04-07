@@ -252,4 +252,4 @@ def test_patient_is_sick_value_error() -> None:
 
 
 if __name__ == "__main__":
-    pytest.main(["-v", "error1.py"])
+    pytest.main(["-v", "test.py"])
