@@ -21,10 +21,13 @@ Parses a tab-delimited file and returns a dictionary.
 `parse_data(patient_filename: str, lab_filename: str) -> tuple[Dict[str, List[str]], Dict[str, List[str]]]`
 
 Parses patient data and lab data files (string) and returns a tuple of dictionaries. 
+
 Columns necessary for this function:
+
 Patient file:
 PatientID
 PatientDateOfBirth
+
 Lab file:
 PatientID
 LabName
