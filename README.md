@@ -25,25 +25,27 @@ Parses patient data and lab data files (string) and returns a tuple of dictionar
 Columns necessary for this function:
 
 Patient file:
-PatientID
+PatientID,
 PatientDateOfBirth
 
 Lab file:
-PatientID
-LabName
+PatientID,
+LabName,
 LabValue
 
 `patient_age(records: Dict[str, List[str]], patient_id: str) -> int`
 1. patient_records: a dictionary with column names as keys and lists of values as values for patient data; 
 2. patient_id: a string representing the patient ID; 
+
 Columns necessary for this function:
-PatientID
+PatientID,
 PatientDateOfBirth
 
 `patient_is_sick(patient_records: dict[str, list[Any]], lab_records: dict[str, list[Any]], patient_id: str, lab_name: str, operator: str, value: float) -> bool`
+
 Columns necessary for this function:
-PatientID
-LabName
+PatientID,
+LabName,
 LabValue
 
 1. patient_records: a dictionary with column names as keys and lists of values as values for patient data; 
