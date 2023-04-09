@@ -41,12 +41,10 @@ Columns necessary for this function:
 
 Patient file:
 
-PatientID
-PatientDateOfBirth
+PatientID, PatientDateOfBirth
 
 Lab file:
-PatientID
-LabDateTime
+PatientID, LabDateTime
 
 
 `patient_age(records: Dict[str, List[str]], patient_id: str) -> int`
