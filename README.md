@@ -1,6 +1,6 @@
 # EHR Library
 
-This is a EHR library that helps analyze the patient and lab data. It reads two files: patient and lab data, and calculate the age of patient and whether the patient is sick or not. 
+This is a EHR library that helps analyze the patient and lab data. It reads two files: patient and lab data, and calculate the age of patient, the age of a patient at the time of their first lab, and whether the patient is sick or not.
 
 
 ## For End Users
