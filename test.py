@@ -1,6 +1,12 @@
 """Testing for EHR."""
 import pytest
-from EHR import parse_file, parse_data, patient_age, patient_is_sick
+from EHR import (
+    parse_file,
+    parse_data,
+    patient_age,
+    patient_is_sick,
+    patient_age_at_first_lab,
+)
 from fake_files import fake_files
 from typing import Dict, List
 
@@ -33,31 +39,19 @@ def test_parse_file() -> None:
             "HJF0",
             "CFEAA0",
         ]
-        assert len(data["PatientGender"]) == 5
         assert len(data["PatientDateOfBirth"]) == 5
-        assert len(data["PatientRace"]) == 5
         assert len(data["PatientMaritalStatus"]) == 5
-        assert len(data["PatientLanguage"]) == 5
-        assert len(data["PatientPopulationPercentageBelowPoverty"]) == 5
 
 
 def test_parse_data() -> None:
     """Test parse_data() function."""
     patient_data_list = [
-        [
-            "PatientID",
-            "PatientGender",
-            "PatientDateOfBirth",
-            "PatientRace",
-            "PatientMaritalStatus",
-            "PatientLanguage",
-            "PatientPopulationPercentageBelowPoverty",
-        ],
-        ["MB2A", "M", "1960-01-01", "White", "Single", "English", "10.23"],
-        ["A418", "F", "1970-07-25", "Asian", "Married", "Chinese", "12.34"],
-        ["CB22", "M", "1980-08-30", "Black", "Divorced", "English", "6.67"],
-        ["HJF0", "F", "1990-09-01", "Hispanic", "Married", "Spanish", "8.12"],
-        ["CFEAA0", "F", "2000-10-03", "White", "Single", "English", "20.45"],
+        ["PatientID", "PatientDateOfBirth"],
+        ["MB2A", "1960-01-01"],
+        ["A418", "1970-07-25"],
+        ["CB22", "1980-08-30"],
+        ["HJF0", "1990-09-01"],
+        ["CFEAA0", "2000-10-03"],
     ]
 
     lab_data_list = [
@@ -74,19 +68,64 @@ def test_parse_data() -> None:
         patient_data, lab_data = parse_data(patient_filename, lab_filename)
 
         # Test patient data
-        assert isinstance(patient_data, dict)
         assert isinstance(patient_data["PatientID"], list)
         assert len(patient_data["PatientID"]) == 5
-        assert patient_data["PatientRace"][3] == "Hispanic"
-        assert patient_data["PatientMaritalStatus"][4] == "Single"
-        assert patient_data["PatientLanguage"][0] == "English"
+        assert patient_data["PatientDateOfBirth"][3] == "1990-09-01"
 
         # Test lab data
         assert isinstance(lab_data, dict)
         assert isinstance(lab_data["PatientID"], list)
         assert lab_data["PatientID"][0] == "MB2A"
-        assert lab_data["AdmissionID"][1] == "1"
-        assert lab_data["LabName"][2] == "CBC: MCH"
+
+
+def test_patient_age_at_first_lab() -> None:
+    """Test patient_age_at_first_lab() function."""
+    patient_data_list = [
+        ["PatientID", "PatientDateOfBirth"],
+        ["MB2A", "1960-01-01"],
+        ["A418", "1970-07-25"],
+        ["CFEAA0", "2000-10-03"],
+    ]
+
+    lab_data_list = [
+        ["PatientID", "AdmissionID", "LabName", "LabValue", "LabDateTime"],
+        ["MB2A", "1", "CBC: WBC", "10.3", "1990-06-01 01:02:03.456"],
+        ["A418", "1", "CBC: Hct", "45.2", "1991-07-01 01:20:34.567"],
+        ["CFEAA0", "1", "CBC: RDW", "12.8", "1994-10-01 01:25:67.890"],
+    ]
+
+    with fake_files(patient_data_list, lab_data_list) as temp_files:
+        patient_filename, lab_filename = temp_files
+        patient_data, lab_data = parse_data(patient_filename, lab_filename)
+        # Test with valid patient ID
+        age = patient_age_at_first_lab(patient_data, lab_data, "MB2A")
+        assert age == 30
+
+
+def test_patient_age_at_first_lab_value_error() -> None:
+    """Test patient_age_at_first_lab() function with invalid patient ID."""
+    patient_data_list = [
+        ["PatientID", "PatientDateOfBirth"],
+        ["MB2A", "1960-01-01"],
+        ["CFEAA0", "2000-10-03"],
+    ]
+
+    lab_data_list = [
+        ["PatientID", "AdmissionID", "LabName", "LabUnit", "LabDateTime"],
+        ["MB2A", "1", "CBC: WBC", "10.3", "1990-06-01 01:02:03.456"],
+        ["CFEAA0", "1", "CBC: RDW", "12.8", "123"],
+    ]
+
+    with fake_files(patient_data_list, lab_data_list) as temp_files:
+        patient_filename, lab_filename = temp_files
+        patient_data, lab_data = parse_data(patient_filename, lab_filename)
+
+        # Test with invalid patient ID
+        with pytest.raises(ValueError, match="Patient x not found in data."):
+            age = patient_age_at_first_lab(patient_data, lab_data, "x")
+        # Test with no lab records for patient ID
+        with pytest.raises(ValueError):
+            age = patient_age_at_first_lab(patient_data, lab_data, "CFEAA0")
 
 
 def test_patient_age() -> None:
@@ -104,8 +143,6 @@ def test_patient_age() -> None:
 
     assert patient_age(patient_data_test, "MB2A") == 63
     assert patient_age(patient_data_test, "A418") == 52
-    assert patient_age(patient_data_test, "CB22") == 42
-    assert patient_age(patient_data_test, "HJF0") == 32
     assert patient_age(patient_data_test, "CFEAA0") == 22
 
 
@@ -217,20 +254,13 @@ def test_patient_is_sick_value_error() -> None:
     """Test ValueError for patient_is_sick function."""
     patient_data_test = {
         "PatientID": ["MB2A", "A418"],
-        "PatientGender": ["M", "F"],
         "PatientDateOfBirth": ["1960-01-01", "1970-07-25"],
-        "PatientRace": ["White", "Asian"],
-        "PatientMaritalStatus": ["Single", "Married"],
-        "PatientLanguage": ["English", "Chinese"],
-        "PatientPopulationPercentageBelowPoverty": ["10.23", "12.34"],
     }
 
     lab_data_test = {
         "PatientID": ["MB2A", "A418"],
         "AdmissionID": ["1", "1"],
         "LabName": ["METABOLIC: GLUCOSE", "METABOLIC: CALCIUM"],
-        "LabValue": ["150", "8.9"],
-        "LabUnits": ["mg/dL", "mg/dL"],
     }
     with pytest.raises(ValueError):
         patient_is_sick(

@@ -55,7 +55,7 @@ def patient_age_at_first_lab(
 ) -> int:
     """Return the age of patient at the time of their first lab."""
     if patient_id not in patient_records["PatientID"]:
-        raise ValueError(f"Patient {patient_id} not found in the data.")
+        raise ValueError(f"Patient {patient_id} not found in data.")
 
     birthdate_index = patient_records["PatientID"].index(patient_id)
     birthdate_str = patient_records["PatientDateOfBirth"][birthdate_index]
@@ -94,7 +94,7 @@ def patient_age(records: Dict[str, List[str]], patient_id: str) -> int:
             records["PatientID"].index(patient_id)
         ]
     except ValueError:
-        raise ValueError(f"Patient {patient_id} not found in the data.")
+        raise ValueError(f"Patient {patient_id} not found in data.")
 
     # O(1): Parsing the birthdate string
     birthdate = datetime.strptime(birthdate_str.split()[0], "%Y-%m-%d")
