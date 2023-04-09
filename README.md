@@ -36,6 +36,7 @@ LabValue
 `patient_age_at_first_lab(patient_records: Dict[str, List[str]], lab_records: Dict[str, List[str]], patient_id: str) -> int`
 
 Returns the age of a patient at the time of their first lab.
+
 Columns necessary for this function:
 
 Patient file:
