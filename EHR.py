@@ -1,4 +1,4 @@
-"""Date time."""
+"""Updated EHR Library."""
 from datetime import datetime
 from typing import Dict, List, Any
 
@@ -48,6 +48,41 @@ def parse_data(
     return patient_data, lab_data
 
 
+def patient_age_at_first_lab(
+    patient_records: Dict[str, List[str]],
+    lab_records: Dict[str, List[str]],
+    patient_id: str,
+) -> int:
+    """Return the age of patient at the time of their first lab."""
+    if patient_id not in patient_records["PatientID"]:
+        raise ValueError(f"Patient {patient_id} not found in data.")
+
+    birthdate_index = patient_records["PatientID"].index(patient_id)
+    birthdate_str = patient_records["PatientDateOfBirth"][birthdate_index]
+    birthdate = datetime.strptime(birthdate_str.split()[0], "%Y-%m-%d")
+
+    lab_dates = [
+        datetime.strptime(lab_records["LabDateTime"][i].split()[0], "%Y-%m-%d")
+        for i, lab_patient_id in enumerate(lab_records["PatientID"])
+        if lab_patient_id == patient_id
+    ]
+
+    if not lab_dates:
+        raise ValueError(f"No lab records found for patient {patient_id}")
+
+    first_lab_date = min(lab_dates)
+    age_years = (
+        first_lab_date.year
+        - birthdate.year
+        - (
+            (first_lab_date.month, first_lab_date.day)
+            < (birthdate.month, birthdate.day)
+        )
+    )
+
+    return age_years
+
+
 def patient_age(records: Dict[str, List[str]], patient_id: str) -> int:
     """Return the age in years of a given patient.
 
@@ -59,7 +94,7 @@ def patient_age(records: Dict[str, List[str]], patient_id: str) -> int:
             records["PatientID"].index(patient_id)
         ]
     except ValueError:
-        raise ValueError(f"Patient {patient_id} not found in the data.")
+        raise ValueError(f"Patient {patient_id} not found in data.")
 
     # O(1): Parsing the birthdate string
     birthdate = datetime.strptime(birthdate_str.split()[0], "%Y-%m-%d")
@@ -120,15 +155,9 @@ def patient_is_sick(
 if __name__ == "__main__":
     patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
 
-    sick = patient_is_sick(
+    age = patient_age_at_first_lab(
         patient_data,
         lab_data,
         "1A8791E3-A61C-455A-8DEE-763EB90C9B2C",
-        "URINALYSIS: RED BLOOD CELLS",
-        "<",
-        10,
     )
-    print(sick)
-
-    age = patient_age(patient_data, "65A7FBE0-EA9F-49E9-9824-D8F3AD98DAC0")
     print(age)
