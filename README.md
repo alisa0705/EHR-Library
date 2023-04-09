@@ -33,6 +33,21 @@ PatientID,
 LabName,
 LabValue
 
+`patient_age_at_first_lab(patient_records: Dict[str, List[str]], lab_records: Dict[str, List[str]], patient_id: str) -> int`
+
+Returns the age of a patient at the time of their first lab.
+Columns necessary for this function:
+
+Patient file:
+
+PatientID
+PatientDateOfBirth
+
+Lab file:
+PatientID
+LabDateTime
+
+
 `patient_age(records: Dict[str, List[str]], patient_id: str) -> int`
 1. patient_records: a dictionary with column names as keys and lists of values as values for patient data; 
 2. patient_id: a string representing the patient ID; 
@@ -60,7 +75,7 @@ LabValue
 
 
 ```python
-from EHR import parse_data, patient_age, patient_is_sick
+from EHR import parse_file, parse_data, patient_age, patient_is_sick, patient_age_at_first_lab
 
 # Parse the patient and lab data files
 patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
