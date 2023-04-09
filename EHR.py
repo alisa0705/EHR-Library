@@ -83,6 +83,75 @@ def patient_age_at_first_lab(
     return age_years
 
 
+def patient_age(records: Dict[str, List[str]], patient_id: str) -> int:
+    """Return the age in years of a given patient.
+
+    Overall time complexity: O(N), where N is the number of patients.
+    """
+    try:
+        # O(N): Finding the index of the patient. N is the number of patients
+        birthdate_str = records["PatientDateOfBirth"][
+            records["PatientID"].index(patient_id)
+        ]
+    except ValueError:
+        raise ValueError(f"Patient {patient_id} not found in the data.")
+
+    # O(1): Parsing the birthdate string
+    birthdate = datetime.strptime(birthdate_str.split()[0], "%Y-%m-%d")
+
+    # O(1): Getting the current date
+    today = datetime.today()
+
+    # O(1): Calculating the age
+    age_years = (
+        today.year
+        - birthdate.year
+        - ((today.month, today.day) < (birthdate.month, birthdate.day))
+    )
+
+    # O(1): Returning the age
+    return age_years
+
+
+def patient_is_sick(
+    patient_records: dict[str, list[Any]],
+    lab_records: dict[str, list[Any]],
+    patient_id: str,
+    lab_name: str,
+    operator: str,
+    value: float,
+) -> bool:
+    """Return a boolean indicating whether sick or not.
+
+    Overall time complexity: O(M), where M is the number of lab records.
+    """
+    if operator not in [">", "<", "="]:
+        raise ValueError("Invalid comparison operator")
+
+    # Check if the patient id is present in patient_records
+    if patient_id not in patient_records["PatientID"]:
+        raise ValueError("Invalid patient id")
+
+    # O(M): Looping through lab records, where M is the number of lab records
+    for i, lab in enumerate(lab_records["LabName"]):
+        # O(1): Comparing lab and patient ID
+        if lab == lab_name and lab_records["PatientID"][i] == patient_id:
+            # O(1): Parsing lab value
+            lab_value = float(lab_records["LabValue"][i])
+
+            # O(1): Evaluating the condition based on the operator
+            if (
+                (operator == ">" and lab_value > value)
+                or (operator == "<" and lab_value < value)
+                or (operator == "=" and lab_value == value)
+            ):
+                # O(1): Returning True if the condition is met
+                return True
+
+    # O(1): Returning False if no matching condition is found
+    return False
+
+
 if __name__ == "__main__":
     patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
 
