@@ -25,11 +25,17 @@ class Lab:
 class Patient:
     """Patient class."""
 
-    def __init__(self, p_id: str, birth: str, race: str):
+    def __init__(self, p_id: str, birth: str, race: str) -> None:
         """Initialize the patient class."""
         self.p_id = p_id
         self.birth = datetime.strptime(birth.split()[0], "%Y-%m-%d")
         self.race = race
+        self.labs: List[Lab] = []  # Add labs attribute to store Lab objects
+
+    def add_lab(self, lab: Lab) -> None:
+        """Add a lab to the patient's labs."""
+        if lab.p_id == self.p_id:
+            self.labs.append(lab)
 
     @property
     def age(self) -> int:
@@ -44,14 +50,12 @@ class Patient:
         )
         return age_years
 
-    def is_sick(
-        self, labs: List["Lab"], lab_name: str, operator: str, value: float
-    ) -> bool:
+    def is_sick(self, lab_name: str, operator: str, value: float) -> bool:
         """Return a boolean indicating whether sick or not."""
         if operator not in [">", "<", "="]:
             raise ValueError("Invalid comparison operator")
 
-        for lab in labs:
+        for lab in self.labs:
             if lab.p_id == self.p_id and lab.lab_name == lab_name:
                 lab_value = lab.lab_value
                 if (
@@ -62,9 +66,9 @@ class Patient:
                     return True
         return False
 
-    def age_since_earliest_lab(self, labs: List[Lab]) -> int:
+    def age_since_earliest_lab(self) -> int:
         """Return the age of the patient at the time of their first lab."""
-        patient_labs = [lab for lab in labs if lab.p_id == self.p_id]
+        patient_labs = [lab for lab in self.labs if lab.p_id == self.p_id]
         if not patient_labs:
             raise ValueError(f"No lab records found for {self.p_id}")
 
@@ -123,19 +127,3 @@ def parse_data(
     ]
 
     return patients, labs
-
-
-if __name__ == "__main__":
-    patients, labs = parse_data("Patient.txt", "lab.txt")
-
-    p_id = "1A8791E3-A61C-455A-8DEE-763EB90C9B2C"
-    target_p = next(patient for patient in patients if patient.p_id == p_id)
-
-    age = target_p.age
-    print(age)
-
-    sick = target_p.is_sick(labs, "URINALYSIS: RED BLOOD CELLS", "<", 10)
-    print(sick)
-
-    age_at_fst_l = target_p.age_since_earliest_lab(labs)
-    print(age_at_fst_l)
