@@ -1,4 +1,8 @@
 """Testing for EHR."""
+
+import sys
+
+sys.path.append("../src")
 import pytest
 from EHR import (
     parse_file,
