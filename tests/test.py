@@ -88,14 +88,22 @@ def test_age_since_earliest_lab() -> None:
         ["HJF0", "CBC: MCV", "98.5", "fL", "1993-09-01 01:24:56.789"],
         ["CFEAA0", "CBC: RDW", "12.8", "%", "1994-10-01 01:25:67.890"],
     ]
-
     with fake_files(patient_data_list, lab_data_list) as temp_files:
         patient_filename, lab_filename = temp_files
         patients, labs = parse_data(patient_filename, lab_filename)
         patient = next((p for p in patients if p.p_id == "MB2A"), None)
         assert patient is not None
+
+        # Assign labs to the corresponding patients
+        for lab in labs:
+            patient = next((p for p in patients if p.p_id == lab.p_id), None)
+            if patient:
+                patient.add_lab(lab)
+
+        patient = next((p for p in patients if p.p_id == "MB2A"), None)
+        assert patient is not None
         # Test with valid patient ID
-        age = patient.age_since_earliest_lab(labs)
+        age = patient.age_since_earliest_lab()
         assert age == 30
 
 
@@ -119,10 +127,17 @@ def test_age_since_earliest_lab_value_error() -> None:
     with fake_files(patient_data_list, lab_data_list) as temp_files:
         patient_filename, lab_filename = temp_files
         patients, labs = parse_data(patient_filename, lab_filename)
+
+        # Assign labs to the corresponding patients
+        for lab in labs:
+            patient = next((p for p in patients if p.p_id == lab.p_id), None)
+            if patient:
+                patient.add_lab(lab)
+
         # Test with invalid patient ID
         with pytest.raises(ValueError, match="No lab records found for x"):
             invalid_patient = Patient("x", "2000-01-01", "Unknown")
-            age = invalid_patient.age_since_earliest_lab(labs)
+            age = invalid_patient.age_since_earliest_lab()
 
 
 def test_patient_age() -> None:
@@ -155,9 +170,12 @@ def test_patient_is_sick_greater_than() -> None:
     patient = Patient("MB2A", "1960-01-01", "White")
     lab = Lab("MB2A", "GLUCOSE", 150, "mg/dL", "1990-06-01")
 
+    # Add the lab to the patient's labs
+    patient.add_lab(lab)
+
     # Test '>' operator
-    assert isinstance(patient.is_sick([lab], "GLUCOSE", ">", 100), bool)
-    assert patient.is_sick([lab], "GLUCOSE", ">", 100) is True
+    assert isinstance(patient.is_sick("GLUCOSE", ">", 100), bool)
+    assert patient.is_sick("GLUCOSE", ">", 100) is True
 
 
 def test_patient_is_sick_less_than() -> None:
@@ -166,8 +184,10 @@ def test_patient_is_sick_less_than() -> None:
     patient = Patient("MB2A", "1960-01-01", "White")
     lab = Lab("MB2A", "GLUCOSE", 150, "mg/dL", "1990-06-01")
 
+    patient.add_lab(lab)
+
     # Test '<' operator
-    assert not patient.is_sick([lab], "GLUCOSE", "<", 100)
+    assert not patient.is_sick("GLUCOSE", "<", 100)
 
 
 def test_patient_is_sick_equal_to() -> None:
@@ -175,9 +195,10 @@ def test_patient_is_sick_equal_to() -> None:
     # Create Patient and Lab instances
     patient = Patient("A418", "1970-07-25", "Asian")
     lab = Lab("A418", "METABOLIC: CALCIUM", 8.9, "mg/dL", "1991-07-01")
+    patient.add_lab(lab)
 
     # Test '=' operator
-    assert patient.is_sick([lab], "METABOLIC: CALCIUM", "=", 8.9) is True
+    assert patient.is_sick("METABOLIC: CALCIUM", "=", 8.9) is True
 
 
 def test_patient_is_sick_value_error() -> None:
@@ -187,8 +208,11 @@ def test_patient_is_sick_value_error() -> None:
     lab1 = Lab("MB2A", "GLUCOSE", 150, "mg/dL", "1990-06-01")
     lab2 = Lab("A418", "METABOLIC: CALCIUM", 8.9, "mg/dL", "1991-07-01")
 
+    # Add labs to the patient's labs
+    patient1.add_lab(lab1)
+
     with pytest.raises(ValueError):
-        patient1.is_sick([lab1, lab2], "METABOLIC: ALK PHOS", "WRONG", 60)
+        patient1.is_sick("METABOLIC: ALK PHOS", "WRONG", 60)
 
 
 if __name__ == "__main__":
