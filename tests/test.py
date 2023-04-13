@@ -1,17 +1,8 @@
 """Testing for EHR."""
-
-import sys
-
-sys.path.append("../src")
-import pytest
-from EHR import (
-    parse_file,
-    parse_data,
-    Patient,
-    Lab,
-)
-from fake_files import fake_files
 from typing import Dict, List
+from EHR import parse_file, parse_data, Patient, Lab
+from fake_files import fake_files
+import pytest
 
 
 def test_parse_file() -> None:
