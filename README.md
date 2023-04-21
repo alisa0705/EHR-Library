@@ -59,10 +59,7 @@ Columns necessary:
 PatientID,
 PatientDateOfBirth
 
-`is_sick(
-        self, labs: List["Lab"], lab_name: str, operator: str, value: float
-    ) -> bool`
-
+`is_sick(self, lab_name: str, operator: str, value: float) -> bool`
 
 
 
@@ -76,7 +73,7 @@ PatientID,
 LabName,
 LabValue
 
-`age_since_earliest_lab(self, labs: List[Lab]) -> int`
+`age_since_earliest_lab(self) -> int`
 
 Returns the age of a patient at the time of their first lab.
 
