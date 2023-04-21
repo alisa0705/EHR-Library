@@ -1,6 +1,6 @@
 # EHR Library
 
-This is a EHR library that helps analyze the patient and lab data. It reads two files: patient and lab data, and calculate the age of patient, the age of a patient at the time of their first lab, and whether the patient is sick or not.
+This is a EHR library that helps analyze the patient and lab data. It reads two files: patient and lab data, and calculate the age of patient, the age of a patient at the time of their first lab, and whether the patient is sick or not. Data is inserted to SQLite database.
 
 
 ## For End Users
@@ -13,25 +13,23 @@ This is a EHR library that helps analyze the patient and lab data. It reads two 
 
 #### Input File Formats
 
-`parse_file(filename: str) -> Dict[str, List[str]]`
+`parse_data(patient_filename: str, lab_filename: str, db: str) -> None:`
 
-Parses a tab-delimited file and returns a dictionary. 
-
-
-`parse_data(patient_filename: str, lab_filename: str) -> tuple[Dict[str, List[str]], Dict[str, List[str]]]`
-
-Parses patient data and lab data files (string) and returns a tuple of dictionaries. 
+Parses patient data and lab data files (string) and also the database. 
 
 Columns necessary for this function:
 
 Patient file:
 PatientID,
-PatientDateOfBirth
+PatientDateOfBirth,
+PatientRace
 
 Lab file:
 PatientID,
 LabName,
-LabValue
+LabUnits,
+LabValue,
+LabDateTime
 
 ###### Classes
 `Lab`: Represents a lab record including attributes such as patient ID, lab name, lab value, lab units, and lab time.
@@ -92,7 +90,7 @@ PatientDateOfBirth,
 
 
 ```python
-from EHR import parse_file, parse_data, Patient, Lab
+from EHR import parse_data, Patient, Lab
 
 # Parse the patient and lab data files
 patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
