@@ -1,21 +1,25 @@
 """Updated EHR Library."""
+import os
+import sqlite3
 from datetime import datetime
 from typing import Dict, List, Any
+from dataclasses import dataclass
 
 
+@dataclass
 class Lab:
     """Lab class."""
 
     def __init__(
         self,
-        p_id: str,
+        patient_id: str,
         lab_name: str,
         lab_value: float,
         lab_units: str,
         lab_time: str,
     ):
         """Initialize the lab class."""
-        self.p_id = p_id
+        self.patient_id = patient_id
         self.lab_name = lab_name
         self.lab_value = float(lab_value)
         self.lab_units = lab_units
@@ -25,24 +29,33 @@ class Lab:
 class Patient:
     """Patient class."""
 
-    def __init__(self, p_id: str, birth: str, race: str) -> None:
-        """Initialize the patient class."""
-        self.p_id = p_id
-        self.birth = datetime.strptime(birth.split()[0], "%Y-%m-%d")
-        self.race = race
-        self.labs: List[Lab] = []  # Add labs attribute to store Lab objects
-
-    def add_lab(self, lab: Lab) -> None:
-        """Add a lab to the patient's labs."""
-        if lab.p_id == self.p_id:
-            self.labs.append(lab)
+    def __init__(self, patient_id: str, database: str) -> None:
+        """Initialize patient class."""
+        self.patient_id = patient_id
+        connection = sqlite3.connect(database)
+        with connection as cursor:
+            self.birth = datetime.strptime(
+                cursor.execute(
+                    "SELECT PatientDateOfBirth FROM \
+                        patients WHERE PatientID = ?",
+                    (patient_id,),
+                ).fetchone()[0],
+                "%Y-%m-%d",
+            )
+            other_data = cursor.execute(
+                "SELECT LabName, LabValue, LabDateTime, LabUnits "
+                "FROM labs WHERE PatientID = ?",
+                (self.patient_id,),
+            ).fetchall()
+            self.labs = [
+                Lab(patient_id, lab_name, lab_value, lab_units, lab_time)
+                for lab_name, lab_value, lab_time, lab_units in other_data
+            ]
 
     @property
     def age(self) -> int:
         """Return the age of the patient."""
         today = datetime.today()
-        if self.birth > today:
-            raise ValueError("Invalid birth date")
         age_years = (
             today.year
             - self.birth.year
@@ -56,7 +69,7 @@ class Patient:
             raise ValueError("Invalid comparison operator")
 
         for lab in self.labs:
-            if lab.p_id == self.p_id and lab.lab_name == lab_name:
+            if lab.patient_id == self.patient_id and lab.lab_name == lab_name:
                 lab_value = lab.lab_value
                 if (
                     (operator == ">" and lab_value > value)
@@ -66,11 +79,15 @@ class Patient:
                     return True
         return False
 
+    @property
     def age_since_earliest_lab(self) -> int:
         """Return the age of the patient at the time of their first lab."""
-        patient_labs = [lab for lab in self.labs if lab.p_id == self.p_id]
+        lb = self.labs
+        p_id = self.patient_id
+        patient_labs = [lab for lab in lb if lab.patient_id == p_id]
+
         if not patient_labs:
-            raise ValueError(f"No lab records found for {self.p_id}")
+            raise ValueError(f"No lab records found for {self.patient_id}")
 
         fst_l = min(patient_labs, key=lambda lab: lab.lab_time).lab_time
         age_years = (
@@ -78,52 +95,63 @@ class Patient:
             - self.birth.year
             - ((fst_l.month, fst_l.day) < (self.birth.month, self.birth.day))
         )
-
         return age_years
 
 
-def parse_file(filename: str) -> Dict[str, List[str]]:
-    """Parse the file."""
-    with open(filename, encoding="UTF-8-sig") as file:
-        lines = file.readlines()
-    if not lines:
-        return {}
-
-    header = lines[0].strip().split("\t")
-    data_dict: Dict[str, List[str]] = {col: [] for col in header}
-
-    for line in lines[1:]:
-        values = line.strip().split("\t")
-        for i, value in enumerate(values):
-            data_dict[header[i]].append(value)
-    return data_dict
-
-
-def parse_data(
-    patient_filename: str, lab_filename: str
-) -> tuple[List[Patient], List[Lab]]:
+def parse_data(patient_filename: str, lab_filename: str, db: str) -> None:
     """Read and parse the patient and lab data files."""
-    patient_data = parse_file(patient_filename)
-    lab_data = parse_file(lab_filename)
+    if os.path.exists(db):
+        os.remove(db)
+    file_list = [patient_filename, lab_filename]
+    for file in file_list:
+        if not os.path.exists(file):
+            raise FileNotFoundError(f"{file} not found")
 
-    patients = [
-        Patient(p_id, dob, race)
-        for p_id, dob, race in zip(
-            patient_data["PatientID"],
-            patient_data["PatientDateOfBirth"],
-            patient_data["PatientRace"],
+    connection = sqlite3.connect(db)
+    with connection as cursor:
+        table_list = ["patients", "labs"]
+        for table in table_list:
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
+
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS patients (
+                        PatientID TEXT PRIMARY KEY,
+                        PatientDateOfBirth TEXT,
+                        PatientRace TEXT
+                    )"""
         )
-    ]
-
-    labs = [
-        Lab(p_id, lab_name, float(lab_value), lab_units, lab_time)
-        for p_id, lab_name, lab_value, lab_units, lab_time in zip(
-            lab_data["PatientID"],
-            lab_data["LabName"],
-            lab_data["LabValue"],
-            lab_data["LabUnits"],
-            lab_data["LabDateTime"],
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS labs (
+                        LabID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        PatientID TEXT,
+                        LabName TEXT,
+                        LabValue TEXT,
+                        LabUnits TEXT,
+                        LabDateTime TEXT
+                    )"""
         )
-    ]
+        enc = "utf-8-sig"
+        with open(lab_filename, mode="r", encoding=enc) as lab_file, open(
+            patient_filename, mode="r", encoding=enc
+        ) as patient_file:
+            lines = lab_file.readlines()
 
-    return patients, labs
+            line_lab = [line.strip().split("\t") for line in lines]
+            line_patient = [
+                line.strip().split("\t") for line in patient_file.readlines()
+            ]
+
+        cursor.executemany(
+            "INSERT INTO labs(PatientID, LabName, LabValue, LabUnits,"
+            "LabDateTime) VALUES (?, ?, ?, ?, ?)",
+            line_lab[1:],
+        )
+
+        cursor.executemany(
+            "INSERT INTO patients VALUES (?, ?, ?)",
+            line_patient[1:],
+        )
+
+
+if __name__ == "__main__":
+    parse_data("patient_sample.txt", "lab_sample.txt", "EHR.db")
