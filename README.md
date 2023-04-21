@@ -93,21 +93,20 @@ PatientDateOfBirth,
 from EHR import parse_data, Patient, Lab
 
 # Parse the patient and lab data files
-patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
 
-    patients, labs = parse_data("Patient.txt", "lab.txt")
+parse_data("patient_sample.txt", "lab_sample.txt", "EHR.db")
 
-    p_id = "1A8791E3-A61C-455A-8DEE-763EB90C9B2C"
-    target_p = next(patient for patient in patients if patient.p_id == p_id)
+patient=Patient("MB2A", "test_database")
 
-    age = target_p.age
-    print(age)
+print(patient.age)
 
-    sick = target_p.is_sick(labs, "URINALYSIS: RED BLOOD CELLS", "<", 10)
-    print(sick)
+sick = patient.is_sick("URINALYSIS: RED BLOOD CELLS", "<", 10)
 
-    age_at_fst_l = target_p.age_since_earliest_lab(labs)
-    print(age_at_fst_l)
+print(sick)
+
+
+print(patient.age_since_earliest_lab)
+
 ```
 
 ## For Contributors
