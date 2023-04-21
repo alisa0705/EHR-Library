@@ -96,14 +96,13 @@ from EHR import parse_data, Patient, Lab
 
 parse_data("patient_sample.txt", "lab_sample.txt", "EHR.db")
 
-patient=Patient("MB2A", "test_database")
+patient=Patient("MB2A",  "EHR.db")
 
 print(patient.age)
 
 sick = patient.is_sick("URINALYSIS: RED BLOOD CELLS", "<", 10)
 
 print(sick)
-
 
 print(patient.age_since_earliest_lab)
 
