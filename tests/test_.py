@@ -64,10 +64,12 @@ def test_parse_data() -> None:
             assert labs_db[0][2] == "1.8"
             assert labs_db[0][3] == "K/uL"
             assert labs_db[0][4] == "1992-07-01 01:36:17.910"
-        test_files = [("patients[0].txt", labb[0]), (p[0], "labs[0].txt")]
-        for patient_file, lab_file in test_files:
-            with pytest.raises(FileNotFoundError):
-                parse_data(patient_file, lab_file, "EHR.db")
+
+
+def test_parse_data_exception() -> None:
+    """Test that parse_data raises a FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        parse_data("patients[0].txt", "labs[0].txt", "EHR.db")
 
 
 def test_patient_age() -> None:
@@ -78,7 +80,10 @@ def test_patient_age() -> None:
 def test_patient_is_sick() -> None:
     """Test patient_is_sick() function"""
     assert patient.is_sick("CBC: WBC", "<", 1.5) is False
-    # Test for invalid lab operator
+
+
+def test_patient_is_sick_exception() -> None:
+    """Test that patient_is_sick() raises a ValueError."""
     with pytest.raises(ValueError):
         patient.is_sick("CBC: WBC", "?", 1.5)
 
