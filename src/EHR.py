@@ -3,23 +3,21 @@ import os
 import sqlite3
 from datetime import datetime
 from typing import Dict, List, Any
-from dataclasses import dataclass
 
 
-@dataclass
 class Lab:
     """Lab class."""
 
     def __init__(
         self,
-        patient_id: str,
+        p_id: str,
         lab_name: str,
         lab_value: float,
         lab_units: str,
         lab_time: str,
     ):
         """Initialize the lab class."""
-        self.patient_id = patient_id
+        self.p_id = p_id
         self.lab_name = lab_name
         self.lab_value = float(lab_value)
         self.lab_units = lab_units
@@ -29,26 +27,26 @@ class Lab:
 class Patient:
     """Patient class."""
 
-    def __init__(self, patient_id: str, database: str) -> None:
+    def __init__(self, p_id: str, database: str) -> None:
         """Initialize patient class."""
-        self.patient_id = patient_id
+        self.p_id = p_id
         connection = sqlite3.connect(database)
         with connection as cursor:
             self.birth = datetime.strptime(
                 cursor.execute(
                     "SELECT PatientDateOfBirth FROM \
                         patients WHERE PatientID = ?",
-                    (patient_id,),
+                    (p_id,),
                 ).fetchone()[0],
                 "%Y-%m-%d",
             )
             other_data = cursor.execute(
                 "SELECT LabName, LabValue, LabDateTime, LabUnits "
                 "FROM labs WHERE PatientID = ?",
-                (self.patient_id,),
+                (self.p_id,),
             ).fetchall()
             self.labs = [
-                Lab(patient_id, lab_name, lab_value, lab_units, lab_time)
+                Lab(p_id, lab_name, lab_value, lab_units, lab_time)
                 for lab_name, lab_value, lab_time, lab_units in other_data
             ]
 
@@ -69,7 +67,7 @@ class Patient:
             raise ValueError("Invalid comparison operator")
 
         for lab in self.labs:
-            if lab.patient_id == self.patient_id and lab.lab_name == lab_name:
+            if lab.lab_name == lab_name:
                 lab_value = lab.lab_value
                 if (
                     (operator == ">" and lab_value > value)
@@ -82,13 +80,9 @@ class Patient:
     @property
     def age_since_earliest_lab(self) -> int:
         """Return the age of the patient at the time of their first lab."""
-        lb = self.labs
-        p_id = self.patient_id
-        patient_labs = [lab for lab in lb if lab.patient_id == p_id]
-
+        patient_labs = [lab for lab in self.labs]
         if not patient_labs:
-            raise ValueError(f"No lab records found for {self.patient_id}")
-
+            raise ValueError(f"No lab records found for {self.p_id}")
         fst_l = min(patient_labs, key=lambda lab: lab.lab_time).lab_time
         age_years = (
             fst_l.year
@@ -155,3 +149,13 @@ def parse_data(patient_filename: str, lab_filename: str, db: str) -> None:
 
 if __name__ == "__main__":
     parse_data("patient_sample.txt", "lab_sample.txt", "EHR.db")
+
+    parse_data(
+        "PatientCorePopulatedTable.txt",
+        "LabsCorePopulatedTable.txt",
+        "SampleDB.db",
+    )
+    patient = Patient("1A8791E3-A61C-455A-8DEE-763EB90C9B2C", "SampleDB.db")
+    print(patient.age)
+    print(patient.age_since_earliest_lab)
+    print(patient.is_sick("<", "URINALYSIS: RED BLOOD CELLS", 1.5))
