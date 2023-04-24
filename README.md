@@ -1,6 +1,6 @@
 # EHR Library
 
-This is a EHR library that helps analyze the patient and lab data. It reads two files: patient and lab data, and calculate the age of patient, the age of a patient at the time of their first lab, and whether the patient is sick or not.
+This is a EHR library that helps analyze the patient and lab data. It reads two files: patient and lab data, and calculate the age of patient, the age of a patient at the time of their first lab, and whether the patient is sick or not. Data is inserted to SQLite database.
 
 
 ## For End Users
@@ -13,25 +13,23 @@ This is a EHR library that helps analyze the patient and lab data. It reads two 
 
 #### Input File Formats
 
-`parse_file(filename: str) -> Dict[str, List[str]]`
+`parse_data(patient_filename: str, lab_filename: str, db: str) -> None:`
 
-Parses a tab-delimited file and returns a dictionary. 
-
-
-`parse_data(patient_filename: str, lab_filename: str) -> tuple[Dict[str, List[str]], Dict[str, List[str]]]`
-
-Parses patient data and lab data files (string) and returns a tuple of dictionaries. 
+Parses patient data and lab data files (string) and also the database. 
 
 Columns necessary for this function:
 
 Patient file:
 PatientID,
-PatientDateOfBirth
+PatientDateOfBirth,
+PatientRace
 
 Lab file:
 PatientID,
 LabName,
-LabValue
+LabUnits,
+LabValue,
+LabDateTime
 
 ###### Classes
 `Lab`: Represents a lab record including attributes such as patient ID, lab name, lab value, lab units, and lab time.
@@ -61,10 +59,7 @@ Columns necessary:
 PatientID,
 PatientDateOfBirth
 
-`is_sick(
-        self, labs: List["Lab"], lab_name: str, operator: str, value: float
-    ) -> bool`
-
+`is_sick(self, lab_name: str, operator: str, value: float) -> bool`
 
 
 
@@ -78,7 +73,7 @@ PatientID,
 LabName,
 LabValue
 
-`age_since_earliest_lab(self, labs: List[Lab]) -> int`
+`age_since_earliest_lab(self) -> int`
 
 Returns the age of a patient at the time of their first lab.
 
@@ -92,24 +87,22 @@ PatientDateOfBirth,
 
 
 ```python
-from EHR import parse_file, parse_data, Patient, Lab
+from EHR import parse_data, Patient, Lab
 
 # Parse the patient and lab data files
-patient_data, lab_data = parse_data("Patient.txt", "lab.txt")
 
-    patients, labs = parse_data("Patient.txt", "lab.txt")
+parse_data("patient_sample.txt", "lab_sample.txt", "EHR.db")
 
-    p_id = "1A8791E3-A61C-455A-8DEE-763EB90C9B2C"
-    target_p = next(patient for patient in patients if patient.p_id == p_id)
+patient=Patient("MB2A",  "EHR.db")
 
-    age = target_p.age
-    print(age)
+print(patient.age)
 
-    sick = target_p.is_sick(labs, "URINALYSIS: RED BLOOD CELLS", "<", 10)
-    print(sick)
+sick = patient.is_sick("URINALYSIS: RED BLOOD CELLS", "<", 10)
 
-    age_at_fst_l = target_p.age_since_earliest_lab(labs)
-    print(age_at_fst_l)
+print(sick)
+
+print(patient.age_since_earliest_lab)
+
 ```
 
 ## For Contributors
